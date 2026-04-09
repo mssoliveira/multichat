@@ -9,7 +9,7 @@ import http from 'http';
 import net from 'net';
 import os from 'os';
 import { Server } from 'socket.io';
-import { WebcastPushConnection } from 'tiktok-live-connector';
+import { TikTokLiveConnection, WebcastEvent } from 'tiktok-live-connector';
 import tmi from 'tmi.js';
 
 // ================= CONFIGURAÇÕES =================
@@ -237,19 +237,17 @@ twitchClient.on('error', (err) => logError('Twitch', err.message));
 
 // ================= TIKTOK =================
 
-const tiktokConnection = new WebcastPushConnection(TIKTOK_USERNAME);
-console.log('Log - tiktokConnection:', tiktokConnection);
+const tiktokConnection = new TikTokLiveConnection(TIKTOK_USERNAME);
 
 async function startTikTok() {
 	try {
 		const teste = await tiktokConnection.connect();
-		console.log('Log - teste:', teste);
 		console.log('✅ Conectado ao chat do TikTok');
 
-		tiktokConnection.on('chat', (data) => {
+		tiktokConnection.on(WebcastEvent.CHAT, (data) => {
 			io.emit('chat', {
 				platform: 'tiktok',
-				user: data.uniqueId,
+				user: data.user.nickname,
 				msg: data.comment,
 			});
 		});
