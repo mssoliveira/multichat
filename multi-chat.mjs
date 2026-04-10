@@ -237,11 +237,26 @@ twitchClient.on('error', (err) => logError('Twitch', err.message));
 
 // ================= TIKTOK =================
 
-const tiktokConnection = new TikTokLiveConnection(TIKTOK_USERNAME);
+let tiktokConnection = new TikTokLiveConnection(TIKTOK_USERNAME);
+let tiktokReconnectTimer = null;
+
+function scheduleTikTokReconnect() {
+	if (tiktokReconnectTimer) return;
+	console.log('🔄 [TikTok] Tentando reconectar em 1 minuto...');
+	tiktokReconnectTimer = setTimeout(() => {
+		tiktokReconnectTimer = null;
+		tiktokConnection = new TikTokLiveConnection(TIKTOK_USERNAME);
+		startTikTok();
+	}, 60_000);
+}
 
 async function startTikTok() {
 	try {
-		const teste = await tiktokConnection.connect();
+		await tiktokConnection.connect();
+		if (tiktokReconnectTimer) {
+			clearTimeout(tiktokReconnectTimer);
+			tiktokReconnectTimer = null;
+		}
 		console.log('✅ Conectado ao chat do TikTok');
 
 		tiktokConnection.on(WebcastEvent.CHAT, (data) => {
@@ -255,15 +270,16 @@ async function startTikTok() {
 		tiktokConnection.on('connected', () =>
 			console.log('✅ TikTok conectado'),
 		);
-		tiktokConnection.on('disconnected', () =>
-			logError('TikTok', 'Desconectado do chat'),
-		);
+		tiktokConnection.on('disconnected', () => {
+			logError('TikTok', 'Desconectado do chat');
+			scheduleTikTokReconnect();
+		});
 		tiktokConnection.on('error', () =>
 			logError('TikTok', 'Erro ao conectar no chat'),
 		);
 	} catch (erro) {
-		console.log('e:', erro);
 		logError('TikTok', 'Erro ao conectar no TikTok');
+		scheduleTikTokReconnect();
 	}
 }
 
