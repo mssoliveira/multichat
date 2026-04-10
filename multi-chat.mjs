@@ -3,7 +3,6 @@
 // Rodar com: node multi-chat.mjs
 // Abra no navegador do PC ou celular: http://IP_DO_PC:PORTA
 
-import { exec } from 'child_process';
 import express from 'express';
 import http from 'http';
 import net from 'net';
@@ -288,22 +287,8 @@ startTikTok();
 // ================= START SERVIDOR COM PORTA DINÂMICA =================
 (async () => {
 	const PORT = await findFreePort(3000);
-	const LOCAL_IP = getLocalIP();
 	server.listen(PORT, '0.0.0.0', () => {
-		const url = `http://${LOCAL_IP}:${PORT}`;
+		const url = `http://0.0.0.0:${PORT}`;
 		console.log(`✅ Multi-chat rodando em ${url}`);
-
-		exec(`echo ${url} | clip`, (err) => {
-			if (err) {
-				logError(
-					'Servidor',
-					'Não foi possível copiar o link para a área de transferência',
-				);
-			} else {
-				console.log(
-					'📋 Link copiado para a área de transferência! Agora é só colar no navegador do celular.',
-				);
-			}
-		});
 	});
 })();
